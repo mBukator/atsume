@@ -1,0 +1,103 @@
+@import 'tailwindcss';
+
+@theme {
+  /* The brief fixes the canvas and the accent; everything else is derived so
+     the accent stays the only saturated thing on screen. */
+  --color-void: #0c0c0c;
+  --color-panel: #131313;
+  --color-raised: #1b1b1b;
+  --color-line: #282828;
+  --color-line-bright: #3a3a3a;
+
+  --color-ink: #ededed;
+  --color-ink-dim: #8c8c8c;
+  --color-ink-faint: #5c5c5c;
+
+  --color-volt: #edff00;
+  --color-volt-ink: #0c0c0c;
+  --color-volt-dim: #7d8500;
+
+  /* Status never carries meaning alone; each pairs with a glyph and a word. */
+  --color-good: #86d98b;
+  --color-warn: #ffb454;
+  --color-bad: #ff6b6b;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:
+    ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+  --radius-sharp: 2px;
+}
+
+@layer base {
+  html {
+    background: var(--color-void);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Every number in this interface changes while you watch it. Tabular figures
+     stop the counters from jittering as digits swap. */
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* The one recurring type gesture: tiny, wide-tracked, uppercase labels that
+     name a value without competing with it. */
+  .eyebrow {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-volt);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-volt);
+    color: var(--color-volt-ink);
+  }
+
+  /* Thin, unobtrusive scrollbars; the log and the grid both scroll a lot. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-bright) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Visible to screen readers, absent from the visual layout. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

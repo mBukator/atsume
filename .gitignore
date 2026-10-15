@@ -1,0 +1,6 @@
+node_modules/
+.next/
+.atsume/
+*.tsbuildinfo
+.env*.local
+.DS_Store
