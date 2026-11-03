@@ -421,7 +421,7 @@ export const runCrawl = async (
             url: entry.url,
             depth: entry.depth,
             queueDepth: frontier.queueDepth(),
-        });``
+        });
 
         const discovery = await request.onPage({
             id: entry.id,

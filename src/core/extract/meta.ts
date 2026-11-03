@@ -110,7 +110,6 @@ const readFollowingDimensions = (
   for (let index = from + 1; index < metas.length; index += 1) {
     const element = metas[index];
     if (element === undefined) continue;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- cheerio element
     const $element = $(element as never);
     const property = ($element.attr(attribute) ?? '').toLowerCase();
     if (!property.startsWith(`${base}:`)) break;
