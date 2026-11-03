@@ -1,0 +1,12 @@
+# Normalize every text file to LF, in the repo and in the working tree, so a
+# Windows checkout with core.autocrlf=true reads the same bytes the tests do.
+* text=auto eol=lf
+
+# Hooks run under sh on every platform.
+.husky/* text eol=lf
+
+# Captured fixtures are compared byte for byte.
+*.bin binary
+
+# Generated; reviewed through package.json, not line by line.
+package-lock.json text eol=lf -diff
