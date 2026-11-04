@@ -1,26 +1,27 @@
 import { describe, expect, it } from "vitest";
+
 import { jobConfigSchema, type JobConfig } from "../config";
-import { type Db, openDatabase } from "../db/open";
+import { openDatabase, type Db } from "../db/open";
 import { JobRepository } from "../db/repository";
 import type { JobId } from "../ids";
 import { emptyLedger } from "../job/budget";
 import type { JobEvent } from "../job/events";
 import {
-    type AssetDiscovery,
-    type CrawlResult,
-    type FetchedPage,
-    noDiscovery,
-    runCrawl,
-} from "./crawler";
-import { Frontier } from "./frontier";
-import {
     FakeHttpClient,
     FakeRenderer,
-    type FakeResponseSpec,
     htmlPage,
     linksTo,
     ManualClock,
+    type FakeResponseSpec,
 } from "../testing";
+import {
+    noDiscovery,
+    runCrawl,
+    type AssetDiscovery,
+    type CrawlResult,
+    type FetchedPage,
+} from "./crawler";
+import { Frontier } from "./frontier";
 
 const T0 = 1_700_000_000_000;
 const SEED = "https://a.test/";
@@ -88,10 +89,7 @@ const crawl = async (options: RunOptions): Promise<RunOutput> => {
             signal: controller.signal,
             onPage: (page) => {
                 pageCount += 1;
-                if (
-                    options.abortAfter !== undefined &&
-                    pageCount >= options.abortAfter
-                )
+                if (options.abortAfter !== undefined && pageCount >= options.abortAfter)
                     controller.abort();
                 return (
                     options.onPageFull?.(page) ??
@@ -117,9 +115,7 @@ const crawl = async (options: RunOptions): Promise<RunOutput> => {
 const visited = (output: RunOutput): string[] =>
     output.events
         .filter(
-            (
-                event
-            ): event is Extract<JobEvent, { type: "crawl/page-visited" }> =>
+            (event): event is Extract<JobEvent, { type: "crawl/page-visited" }> =>
                 event.type === "crawl/page-visited"
         )
         .map((event) => event.url);
@@ -179,14 +175,10 @@ describe("link following", () => {
             },
         });
 
-        expect(
-            output.http
-                .urlsRequested()
-                .some((url) => url.includes("get_image"))
-        ).toBe(false);
-        expect(output.http.urlsRequested()).toContain(
-            "https://a.test/album/next/"
+        expect(output.http.urlsRequested().some((url) => url.includes("get_image"))).toBe(
+            false
         );
+        expect(output.http.urlsRequested()).toContain("https://a.test/album/next/");
         expect(output.result?.summary.pagesSkipped).toBe(0);
     });
 
@@ -200,9 +192,7 @@ describe("link following", () => {
             },
         });
 
-        expect(output.http.urlsRequested()).not.toContain(
-            "https://elsewhere.test/page"
-        );
+        expect(output.http.urlsRequested()).not.toContain("https://elsewhere.test/page");
         expect(visited(output)).toContain("https://a.test/local");
     });
 
@@ -360,9 +350,7 @@ describe("robots.txt", () => {
         expect(notices.map((event) => event.message).join(" ")).toContain(
             "3600s between requests"
         );
-        expect(notices.map((event) => event.message).join(" ")).toContain(
-            "Crawl-delay"
-        );
+        expect(notices.map((event) => event.message).join(" ")).toContain("Crawl-delay");
     });
 
     it("says nothing about a delay short enough not to matter", async () => {
@@ -374,9 +362,7 @@ describe("robots.txt", () => {
             },
         });
 
-        expect(
-            output.events.some((event) => event.type === "crawl/notice")
-        ).toBe(false);
+        expect(output.events.some((event) => event.type === "crawl/notice")).toBe(false);
     });
 
     it("applies Crawl-delay on top of the configured floor", async () => {
@@ -401,9 +387,7 @@ describe("robots.txt", () => {
         });
 
         // Seed, then one link: a single 2s gap between the two page fetches.
-        expect(output.clock.sleeps.filter((ms) => ms === 2_000)).toHaveLength(
-            1
-        );
+        expect(output.clock.sleeps.filter((ms) => ms === 2_000)).toHaveLength(1);
     });
 });
 
@@ -468,9 +452,7 @@ describe("sitemaps", () => {
 
         // Everything it produced would be discarded as out of scope, so fetching
         // it is pure cost — and on a large site, minutes of it.
-        expect(output.http.urlsRequested()).not.toContain(
-            "https://a.test/sitemap.xml"
-        );
+        expect(output.http.urlsRequested()).not.toContain("https://a.test/sitemap.xml");
         expect(output.result?.summary.pagesVisited).toBe(1);
     });
 
@@ -520,9 +502,9 @@ describe("failures and non-HTML", () => {
 
         expect(output.result?.summary.pagesFailed).toBe(1);
         expect(output.result?.summary.pagesVisited).toBe(2);
-        expect(
-            output.events.some((event) => event.type === "crawl/page-failed")
-        ).toBe(true);
+        expect(output.events.some((event) => event.type === "crawl/page-failed")).toBe(
+            true
+        );
     });
 
     it("does not parse non-HTML responses as pages", async () => {
@@ -640,9 +622,7 @@ describe("discovery reporting", () => {
         expect(output.result?.summary.uniqueAssets).toBe(6);
         expect(output.result?.summary.bytesProjected).toBe(2_000);
         expect(
-            output.events.filter(
-                (event) => event.type === "crawl/assets-discovered"
-            )
+            output.events.filter((event) => event.type === "crawl/assets-discovered")
         ).toHaveLength(2);
     });
 
@@ -656,9 +636,7 @@ describe("discovery reporting", () => {
         });
 
         expect(
-            output.events.some(
-                (event) => event.type === "crawl/assets-discovered"
-            )
+            output.events.some((event) => event.type === "crawl/assets-discovered")
         ).toBe(false);
     });
 });
@@ -667,12 +645,7 @@ describe("resumability", () => {
     it("picks up a frontier left behind by an earlier run", async () => {
         const output = await crawl({
             prepare: (db, jobId) => {
-                new Frontier(db, jobId).enqueue(
-                    "https://a.test/leftover",
-                    1,
-                    null,
-                    T0
-                );
+                new Frontier(db, jobId).enqueue("https://a.test/leftover", 1, null, T0);
             },
             config: { crawl: { maxDepth: 1, maxConcurrentPages: 1 } },
             routes: {
@@ -792,9 +765,7 @@ describe("renderer escalation", () => {
 describe("skipped pages are visible, not silent", () => {
     const skips = (output: RunOutput) =>
         output.events.filter(
-            (
-                event
-            ): event is Extract<JobEvent, { type: "crawl/page-skipped" }> =>
+            (event): event is Extract<JobEvent, { type: "crawl/page-skipped" }> =>
                 event.type === "crawl/page-skipped"
         );
 

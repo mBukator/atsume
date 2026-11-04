@@ -1,5 +1,12 @@
-import type { MediaCandidate } from "../media";
-import { emptyHints } from "../media";
+import { emptyHints, type MediaCandidate } from "../media";
+import { extensionOf } from "../url";
+import {
+    directCandidate,
+    hintsFrom,
+    resolveAgainst,
+    type Extractor,
+    type PageContext,
+} from "./context";
 import {
     classifyKind,
     classifyKindOrDefault,
@@ -7,15 +14,7 @@ import {
     extractComputedBackgroundUrls,
     isHlsUrl,
 } from "./css-urls";
-import {
-    directCandidate,
-    type Extractor,
-    hintsFrom,
-    type PageContext,
-    resolveAgainst,
-} from "./context";
 import { parseSrcset, pickLargestVariant } from "./srcset";
-import { extensionOf } from "../url";
 
 /** Lazy-loading attributes, in the order they should be trusted. */
 const LAZY_SRC_ATTRIBUTES = [
@@ -33,9 +32,9 @@ export const extractImgSrc: Extractor = (context) => {
         const $element = context.$(element);
         const raw =
             $element.attr("src") ??
-            LAZY_SRC_ATTRIBUTES.map((attribute) =>
-                $element.attr(attribute)
-            ).find((value) => value !== undefined);
+            LAZY_SRC_ATTRIBUTES.map((attribute) => $element.attr(attribute)).find(
+                (value) => value !== undefined
+            );
         if (raw === undefined) return;
 
         const url = resolveAgainst(context, raw);
@@ -70,9 +69,9 @@ export const extractImgSrcset: Extractor = (context) => {
             const $element = context.$(element);
             const raw =
                 $element.attr("srcset") ??
-                LAZY_SRCSET_ATTRIBUTES.map((attribute) =>
-                    $element.attr(attribute)
-                ).find((value) => value !== undefined);
+                LAZY_SRCSET_ATTRIBUTES.map((attribute) => $element.attr(attribute)).find(
+                    (value) => value !== undefined
+                );
             if (raw === undefined) return;
 
             const best = pickLargestVariant(parseSrcset(raw));
@@ -86,12 +85,8 @@ export const extractImgSrcset: Extractor = (context) => {
                 title: $element.attr("title"),
                 // The `w` descriptor is the file's real intrinsic width, which is better
                 // information than the `width` attribute's layout size.
-                width:
-                    best.width === null
-                        ? $element.attr("width")
-                        : String(best.width),
-                height:
-                    best.width === null ? $element.attr("height") : undefined,
+                width: best.width === null ? $element.attr("width") : String(best.width),
+                height: best.width === null ? $element.attr("height") : undefined,
                 descriptor: best.descriptor,
             });
             candidates.push(
@@ -192,12 +187,7 @@ export const extractVideo: Extractor = (context) => {
             height: $element.attr("height"),
         });
 
-        push(
-            $element.attr("src") ?? $element.attr("data-src"),
-            "video-src",
-            null,
-            hints
-        );
+        push($element.attr("src") ?? $element.attr("data-src"), "video-src", null, hints);
 
         const poster = $element.attr("poster");
         if (poster !== undefined) {
@@ -254,8 +244,7 @@ export const extractCssBackground: Extractor = (context) => {
     });
 
     context.$("style").each((_index, element) => {
-        for (const raw of extractBackgroundUrls(context.$(element).text()))
-            push(raw);
+        for (const raw of extractBackgroundUrls(context.$(element).text())) push(raw);
     });
 
     for (const sheet of context.stylesheets) {
@@ -265,8 +254,7 @@ export const extractCssBackground: Extractor = (context) => {
     // Computed styles only exist for rendered pages, and are the only way to see
     // a background applied by a class in a stylesheet we never fetched.
     for (const background of context.computedBackgrounds) {
-        for (const raw of extractComputedBackgroundUrls(background.value))
-            push(raw);
+        for (const raw of extractComputedBackgroundUrls(background.value)) push(raw);
     }
 
     return candidates;
@@ -296,8 +284,7 @@ export const matchEmbedProvider = (url: string): EmbedMatch | null => {
     ) {
         return { provider: "youtube" };
     }
-    if (host === "vimeo.com" || host === "player.vimeo.com")
-        return { provider: "vimeo" };
+    if (host === "vimeo.com" || host === "player.vimeo.com") return { provider: "vimeo" };
     if (host === "dailymotion.com" || host === "geo.dailymotion.com")
         return { provider: "dailymotion" };
     return null;
@@ -430,13 +417,8 @@ export const extractLinkedMedia: Extractor = (context) => {
 
         const raw = [
             $element.attr("href"),
-            ...LINK_MEDIA_ATTRIBUTES.map((attribute) =>
-                $element.attr(attribute)
-            ),
-        ].filter(
-            (value): value is string =>
-                value !== undefined && value.trim() !== ""
-        );
+            ...LINK_MEDIA_ATTRIBUTES.map((attribute) => $element.attr(attribute)),
+        ].filter((value): value is string => value !== undefined && value.trim() !== "");
 
         for (const value of raw) {
             const url = resolveAgainst(context, value);
@@ -461,9 +443,7 @@ export const extractLinkedMedia: Extractor = (context) => {
                     "link-href",
                     context.pageUrl,
                     hintsFrom({
-                        alt: wrapsImage
-                            ? $thumbnail.attr("alt")
-                            : $element.attr("title"),
+                        alt: wrapsImage ? $thumbnail.attr("alt") : $element.attr("title"),
                         title: $element.attr("title"),
                     })
                 )
