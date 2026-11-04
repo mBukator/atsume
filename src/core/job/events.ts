@@ -35,7 +35,7 @@ export const jobEventSchema = z.discriminatedUnion("type", [
         type: z.literal("crawl/page-skipped"),
         at: epochMsSchema,
         url: z.string(),
-        /** robots, scope, redirect, content type — why it was passed over. */
+        /** robots, scope, redirect, content type - why it was passed over. */
         reason: z.string(),
         queueDepth: z.number().int().nonnegative(),
     }),

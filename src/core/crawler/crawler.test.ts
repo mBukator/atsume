@@ -160,8 +160,8 @@ describe("link following", () => {
 
     it("does not queue a linked file as a page, trailing slash and all", async () => {
         // A gallery of tokenised originals. Each href is an asset the
-        // extractors claim, so spending a request to learn it is not HTML —
-        // once per item, behind the crawl delay — is pure waste.
+        // extractors claim, so spending a request to learn it is not HTML -
+        // once per item, behind the crawl delay - is pure waste.
         const output = await crawl({
             config: { crawl: { maxDepth: 1, maxConcurrentPages: 1 } },
             routes: {
@@ -451,7 +451,7 @@ describe("sitemaps", () => {
         });
 
         // Everything it produced would be discarded as out of scope, so fetching
-        // it is pure cost — and on a large site, minutes of it.
+        // it is pure cost - and on a large site, minutes of it.
         expect(output.http.urlsRequested()).not.toContain("https://a.test/sitemap.xml");
         expect(output.result?.summary.pagesVisited).toBe(1);
     });

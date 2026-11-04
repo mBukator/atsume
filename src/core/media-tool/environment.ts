@@ -60,10 +60,10 @@ const probeVersion = async (
 };
 
 const PATH_HINT =
-    "not found on PATH — add its folder to PATH, or set tools.ytDlpPath to the full path";
+    "not found on PATH - add its folder to PATH, or set tools.ytDlpPath to the full path";
 
 const FFMPEG_HINT =
-    "not found on PATH — required to remux HLS streams and merge separate audio and video";
+    "not found on PATH - required to remux HLS streams and merge separate audio and video";
 
 /**
  * Chromium is checked by looking for the binary rather than launching it:

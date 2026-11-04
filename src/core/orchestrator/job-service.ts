@@ -341,7 +341,7 @@ export class JobService {
             if (!headroom.ok) {
                 return err({
                     kind: "invalid-state",
-                    detail: `${describeBreach(headroom.error)} — raise the ${headroom.error.cap} cap before resuming`,
+                    detail: `${describeBreach(headroom.error)} - raise the ${headroom.error.cap} cap before resuming`,
                 });
             }
         }

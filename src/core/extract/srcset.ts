@@ -1,7 +1,7 @@
 /**
  * `srcset` cannot be split on commas: URLs may contain them, and descriptors
  * are separated from URLs by whitespace, not punctuation. This follows the
- * HTML spec's scan — read a URL as a run of non-whitespace, then read its
+ * HTML spec's scan - read a URL as a run of non-whitespace, then read its
  * descriptor up to the next comma.
  */
 

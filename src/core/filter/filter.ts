@@ -67,7 +67,7 @@ export const evaluateFilter = (
 ): FilterVerdict => {
     // The server gets the last word, and it is asked first: "not a file at all"
     // is a more useful answer than "you filtered out that kind". `classifyKind`
-    // cannot stand in here — a text/html response to `/photo.jpg` still reads as
+    // cannot stand in here - a text/html response to `/photo.jpg` still reads as
     // an image, because the extension wins whenever the MIME is not media.
     if (input.contentType !== null && isNonMediaContentType(input.contentType)) {
         return excluded("not-media");

@@ -29,7 +29,7 @@ export const isRunning = (state: JobState): boolean =>
 
 export const isResumable = (state: JobState): boolean => state.status === "paused";
 
-/** 0–1, or null when the total is not yet known. */
+/** 0-1, or null when the total is not yet known. */
 export const downloadFraction = (state: JobState): number | null => {
     const progress =
         state.status === "downloading"
@@ -61,7 +61,7 @@ export const describeState = (state: JobState): string => {
         case "paused": {
             const why =
                 state.reason.kind === "budget"
-                    ? `budget cap reached — ${describeBreach(state.reason.breach)}`
+                    ? `budget cap reached - ${describeBreach(state.reason.breach)}`
                     : state.reason.kind === "interrupted"
                       ? state.reason.note
                       : "paused by you";

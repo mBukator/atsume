@@ -277,7 +277,7 @@ describe("measurement progress", () => {
             },
         ]);
 
-    it("changes nothing — it exists to tell the client the rows moved", () => {
+    it("changes nothing - it exists to tell the client the rows moved", () => {
         const before = reviewing();
         const after = run(before, [
             { type: "probe/progress", at: T0 + 2, probed: 10, total: 40 },
