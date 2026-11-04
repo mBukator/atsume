@@ -1,24 +1,21 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+
 import type { MediaCandidate } from "../media";
-import {
-    buildPageContext,
-    type NetworkRecord,
-    type PageContextInput,
-} from "./context";
-import { dedupeCandidates, extractNetworkLog, runExtractors } from "./index";
+import { buildPageContext, type NetworkRecord, type PageContextInput } from "./context";
 import {
     extractCssBackground,
     extractIframeEmbed,
     extractImgSrc,
     extractImgSrcset,
+    extractLinkedMedia,
     extractPictureSource,
     extractVideo,
     matchEmbedProvider,
 } from "./html";
+import { dedupeCandidates, extractNetworkLog, runExtractors } from "./index";
 import { extractJsonLd, extractMeta } from "./meta";
-import { extractLinkedMedia } from "./html";
 
 const PAGE_URL = "https://example.test/gallery/";
 
@@ -63,9 +60,7 @@ describe("extractImgSrc", () => {
     });
 
     it("ignores an img with no usable source", () => {
-        expect(extractImgSrc(context({ html: '<img alt="nothing">' }))).toEqual(
-            []
-        );
+        expect(extractImgSrc(context({ html: '<img alt="nothing">' }))).toEqual([]);
     });
 });
 
@@ -143,9 +138,7 @@ describe("extractCssBackground", () => {
         const found = extractCssBackground(
             context({
                 html: fixture,
-                stylesheets: [
-                    ".late { background-image: url(/sheet/late.png) }",
-                ],
+                stylesheets: [".late { background-image: url(/sheet/late.png) }"],
             })
         );
 
@@ -161,9 +154,7 @@ describe("extractCssBackground", () => {
 
     it("does not mistake a font src for page media", () => {
         const found = extractCssBackground(context({ html: fixture }));
-        expect(urls(found)).not.toContain(
-            "https://example.test/fonts/inter.woff2"
-        );
+        expect(urls(found)).not.toContain("https://example.test/fonts/inter.woff2");
     });
 
     it("reads computed backgrounds from a rendered page", () => {
@@ -202,9 +193,9 @@ describe("extractMeta", () => {
     });
 
     it("ignores meta tags that are not media", () => {
-        expect(
-            found.every((candidate) => !candidate.url.includes("description"))
-        ).toBe(true);
+        expect(found.every((candidate) => !candidate.url.includes("description"))).toBe(
+            true
+        );
     });
 });
 
@@ -269,18 +260,13 @@ describe("extractIframeEmbed", () => {
     });
 
     it("leaves unrecognised iframes alone", () => {
-        expect(urls(found).some((url) => url.includes("google.com/maps"))).toBe(
-            false
-        );
+        expect(urls(found).some((url) => url.includes("google.com/maps"))).toBe(false);
     });
 
     it("recognises hosts with and without www", () => {
-        expect(matchEmbedProvider("https://youtu.be/abc")?.provider).toBe(
-            "youtube"
-        );
+        expect(matchEmbedProvider("https://youtu.be/abc")?.provider).toBe("youtube");
         expect(
-            matchEmbedProvider("https://www.youtube-nocookie.com/embed/x")
-                ?.provider
+            matchEmbedProvider("https://www.youtube-nocookie.com/embed/x")?.provider
         ).toBe("youtube");
         expect(matchEmbedProvider("https://example.test/embed/x")).toBeNull();
     });
@@ -423,9 +409,9 @@ describe("runExtractors on the fixture", () => {
     });
 
     it("records provenance on every candidate", () => {
-        expect(
-            candidates.every((candidate) => candidate.foundOn === PAGE_URL)
-        ).toBe(true);
+        expect(candidates.every((candidate) => candidate.foundOn === PAGE_URL)).toBe(
+            true
+        );
         expect(
             new Set(candidates.map((candidate) => candidate.foundBy)).size
         ).toBeGreaterThanOrEqual(8);
@@ -433,9 +419,7 @@ describe("runExtractors on the fixture", () => {
 
     it("never emits a relative or non-http URL", () => {
         expect(
-            candidates.every((candidate) =>
-                candidate.url.startsWith("https://")
-            )
+            candidates.every((candidate) => candidate.url.startsWith("https://"))
         ).toBe(true);
     });
 
@@ -474,9 +458,7 @@ describe("extractLinkedMedia", () => {
             )
         );
 
-        expect(found.map((c) => c.url)).toEqual([
-            "https://site.test/full/photo.jpg",
-        ]);
+        expect(found.map((c) => c.url)).toEqual(["https://site.test/full/photo.jpg"]);
         expect(found[0]).toMatchObject({ kind: "image", foundBy: "link-href" });
         // The alt on the thumbnail describes the full-size file too.
         expect(found[0]?.hints.alt).toBe("Plate one");
@@ -513,9 +495,7 @@ describe("extractLinkedMedia", () => {
 
     it("does not duplicate when href and a data attribute agree", () => {
         const found = extractLinkedMedia(
-            ctx(
-                '<a href="/full/a.jpg" data-src="/full/a.jpg"><img src="/t.jpg"></a>'
-            )
+            ctx('<a href="/full/a.jpg" data-src="/full/a.jpg"><img src="/t.jpg"></a>')
         );
         expect(found).toHaveLength(1);
     });
@@ -551,9 +531,7 @@ describe("extractLinkedMedia", () => {
 
     it("believes a lightbox that declares a type other than image", () => {
         const found = extractLinkedMedia(
-            ctx(
-                '<a href="/page/2" data-fancybox-type="iframe"><img src="/t.jpg"></a>'
-            )
+            ctx('<a href="/page/2" data-fancybox-type="iframe"><img src="/t.jpg"></a>')
         );
         expect(found).toEqual([]);
     });

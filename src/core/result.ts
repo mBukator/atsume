@@ -4,13 +4,13 @@
  */
 
 export interface Ok<T> {
-  readonly ok: true;
-  readonly value: T;
+    readonly ok: true;
+    readonly value: T;
 }
 
 export interface Err<E> {
-  readonly ok: false;
-  readonly error: E;
+    readonly ok: false;
+    readonly error: E;
 }
 
 export type Result<T, E> = Ok<T> | Err<E>;
@@ -25,27 +25,29 @@ export const isOk = <T, E>(result: Result<T, E>): result is Ok<T> => result.ok;
 export const isErr = <T, E>(result: Result<T, E>): result is Err<E> => !result.ok;
 
 export const map = <T, U, E>(result: Result<T, E>, f: (value: T) => U): Result<U, E> =>
-  result.ok ? ok(f(result.value)) : result;
+    result.ok ? ok(f(result.value)) : result;
 
-export const mapErr = <T, E, F>(result: Result<T, E>, f: (error: E) => F): Result<T, F> =>
-  result.ok ? result : err(f(result.error));
+export const mapErr = <T, E, F>(
+    result: Result<T, E>,
+    f: (error: E) => F
+): Result<T, F> => (result.ok ? result : err(f(result.error)));
 
 export const andThen = <T, U, E>(
-  result: Result<T, E>,
-  f: (value: T) => Result<U, E>,
+    result: Result<T, E>,
+    f: (value: T) => Result<U, E>
 ): Result<U, E> => (result.ok ? f(result.value) : result);
 
 export const unwrapOr = <T, E>(result: Result<T, E>, fallback: T): T =>
-  result.ok ? result.value : fallback;
+    result.ok ? result.value : fallback;
 
 /** Short-circuits on the first error. */
 export const collect = <T, E>(results: readonly Result<T, E>[]): Result<T[], E> => {
-  const values: T[] = [];
-  for (const result of results) {
-    if (!result.ok) return result;
-    values.push(result.value);
-  }
-  return ok(values);
+    const values: T[] = [];
+    for (const result of results) {
+        if (!result.ok) return result;
+        values.push(result.value);
+    }
+    return ok(values);
 };
 
 /**
@@ -53,19 +55,22 @@ export const collect = <T, E>(results: readonly Result<T, E>[]): Result<T[], E> 
  * whole crawl, but the failure still has to be reported.
  */
 export const partition = <T, E>(
-  results: readonly Result<T, E>[],
+    results: readonly Result<T, E>[]
 ): { readonly values: T[]; readonly errors: E[] } => {
-  const values: T[] = [];
-  const errors: E[] = [];
-  for (const result of results) {
-    if (result.ok) values.push(result.value);
-    else errors.push(result.error);
-  }
-  return { values, errors };
+    const values: T[] = [];
+    const errors: E[] = [];
+    for (const result of results) {
+        if (result.ok) values.push(result.value);
+        else errors.push(result.error);
+    }
+    return { values, errors };
 };
 
 /** Adapter boundary: this is the only sanctioned way to leave Result-land. */
-export const unwrapOrThrow = <T, E>(result: Result<T, E>, toError: (error: E) => Error): T => {
-  if (result.ok) return result.value;
-  throw toError(result.error);
+export const unwrapOrThrow = <T, E>(
+    result: Result<T, E>,
+    toError: (error: E) => Error
+): T => {
+    if (result.ok) return result.value;
+    throw toError(result.error);
 };

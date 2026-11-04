@@ -1,33 +1,32 @@
 import type { Clock } from "../clock";
 import type { JobConfig } from "../config";
 import type { Db } from "../db/open";
-import type { JobId, PageId } from "../ids";
-import {
-    type BudgetBreach,
-    type BudgetLedger,
-    checkBudget,
-    creditPage,
-} from "../job/budget";
 import type { ComputedBackground, NetworkRecord } from "../extract/context";
 import { classifyKind } from "../extract/css-urls";
+import type { JobId, PageId } from "../ids";
+import {
+    checkBudget,
+    creditPage,
+    type BudgetBreach,
+    type BudgetLedger,
+} from "../job/budget";
 import type { JobEvent } from "../job/events";
-import type { Renderer } from "../render/renderer";
-import { shouldEscalate } from "../render/renderer";
 import { type CrawlSummary, type JobError } from "../job/state";
-import { err, ok, type Result } from "../result";
-import { normalizeUrl } from "../url";
-import { Frontier } from "./frontier";
 import {
     contentTypeOf,
     decodeText,
     describeHttpError,
-    type HttpClient,
     isHtml,
+    type HttpClient,
 } from "../net/http";
+import { shouldEscalate, type Renderer } from "../render/renderer";
+import { err, ok, type Result } from "../result";
+import { normalizeUrl } from "../url";
+import { Frontier } from "./frontier";
 import { HostRateLimiter } from "./rate-limiter";
 import { decideUrl, RobotsRegistry } from "./robots-registry";
-import { collectSitemapUrls } from "./sitemap";
 import { decideScope, extractLinks, readMetaRobots } from "./scope";
+import { collectSitemapUrls } from "./sitemap";
 
 export type RenderMode = "static" | "rendered";
 
@@ -73,9 +72,7 @@ export interface CrawlRequest {
     readonly ledger: BudgetLedger;
     readonly signal: AbortSignal;
     /** Milestone 3 wires the extractors in here; until then it can be a stub. */
-    readonly onPage: (
-        page: FetchedPage
-    ) => Promise<AssetDiscovery> | AssetDiscovery;
+    readonly onPage: (page: FetchedPage) => Promise<AssetDiscovery> | AssetDiscovery;
 }
 
 export interface CrawlResult {
@@ -121,21 +118,13 @@ export const runCrawl = async (
         signal,
     };
 
-    const robots = new RobotsRegistry(
-        deps.http,
-        deps.db,
-        config.crawl.userAgent
-    );
-    const limiter = new HostRateLimiter(
-        deps.clock,
-        config.crawl.requestDelayMs
-    );
+    const robots = new RobotsRegistry(deps.http, deps.db, config.crawl.userAgent);
+    const limiter = new HostRateLimiter(deps.clock, config.crawl.requestDelayMs);
     const frontier = new Frontier(deps.db, jobId);
 
     // The seed decides the whole run, so it is checked before anything is queued.
     const seedRobots = await robots.forUrl(seedUrl, requestOptions, startedAt);
-    if (!seedRobots.ok)
-        return err({ kind: "internal", message: "robots lookup failed" });
+    if (!seedRobots.ok) return err({ kind: "internal", message: "robots lookup failed" });
     const seedDecision = decideUrl(seedRobots.value, seedUrl);
     if (seedDecision.kind === "disallowed") {
         return err({
@@ -190,10 +179,7 @@ export const runCrawl = async (
     let inFlight = 0;
     const announcedDelay = new Set<string>();
 
-    const halt = (
-        reason: CrawlResult["stopped"],
-        cause: BudgetBreach | null
-    ): void => {
+    const halt = (reason: CrawlResult["stopped"], cause: BudgetBreach | null): void => {
         if (stop.reason === "finished") stop.reason = reason;
         if (cause !== null) stop.breach ??= cause;
     };
@@ -217,18 +203,11 @@ export const runCrawl = async (
         });
     };
 
-    const processEntry = async (
-        entry: ReturnType<Frontier["claim"]>
-    ): Promise<void> => {
+    const processEntry = async (entry: ReturnType<Frontier["claim"]>): Promise<void> => {
         if (entry === null) return;
         const now = deps.clock.now();
 
-        const scope = decideScope(
-            entry.url,
-            entry.depth,
-            seedUrl,
-            config.crawl
-        );
+        const scope = decideScope(entry.url, entry.depth, seedUrl, config.crawl);
         if (scope.kind !== "in-scope") {
             skip(
                 entry,
@@ -255,19 +234,12 @@ export const runCrawl = async (
                 return;
             }
             if (decision.kind === "unavailable") {
-                skip(
-                    entry,
-                    "skipped-robots",
-                    "robots.txt could not be read",
-                    now
-                );
+                skip(entry, "skipped-robots", "robots.txt could not be read", now);
                 return;
             }
         }
 
-        const crawlDelayMs = hostRobots.ok
-            ? hostRobots.value.crawlDelayMs
-            : null;
+        const crawlDelayMs = hostRobots.ok ? hostRobots.value.crawlDelayMs : null;
         const effectiveDelay = limiter.delayFor(crawlDelayMs);
 
         // Waiting on a rate limit looks identical to being hung. Say so once per
@@ -405,8 +377,8 @@ export const runCrawl = async (
         if (!meta.nofollow && entry.depth < config.crawl.maxDepth) {
             const links = extractLinks(html, response.value.url).filter(
                 (link) =>
-                    decideScope(link, entry.depth + 1, seedUrl, config.crawl)
-                        .kind === "in-scope" &&
+                    decideScope(link, entry.depth + 1, seedUrl, config.crawl).kind ===
+                        "in-scope" &&
                     // A link straight to a file is an asset, and the extractors already
                     // collected it. Queueing it as a page just spends a request to
                     // discover it is not HTML.
@@ -457,12 +429,7 @@ export const runCrawl = async (
             }
             if (stop.reason !== "finished") return;
 
-            const elapsed = checkBudget(
-                ledger,
-                config.caps,
-                deps.clock.now(),
-                "crawl"
-            );
+            const elapsed = checkBudget(ledger, config.caps, deps.clock.now(), "crawl");
             if (!elapsed.ok) {
                 halt("budget", elapsed.error);
                 return;
@@ -545,8 +512,7 @@ const seedFromSitemaps = async (
 
     const inScope = collected.urls.filter(
         (url) =>
-            decideScope(url, 1, context.seedUrl, context.config.crawl).kind ===
-            "in-scope"
+            decideScope(url, 1, context.seedUrl, context.config.crawl).kind === "in-scope"
     );
     const added = frontier.enqueueMany(inScope, 1, null, now);
 

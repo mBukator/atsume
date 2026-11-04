@@ -4,8 +4,8 @@
  * indexed by `PRAGMA user_version`.
  */
 export const MIGRATIONS: readonly string[] = [
-  // 1 — initial schema
-  `
+    // 1 — initial schema
+    `
   CREATE TABLE jobs (
     id            TEXT    PRIMARY KEY,
     seed_url      TEXT    NOT NULL,

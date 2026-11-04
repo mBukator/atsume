@@ -1,30 +1,42 @@
-import { NextResponse } from 'next/server';
-import { buildManifest } from '@/core/orchestrator/manifest';
-import { getJobService } from '../../../_lib/service';
-import { jobIdFrom, respond, type RouteContext } from '../../../_lib/respond';
+import { buildManifest } from "@/core/orchestrator/manifest";
+import { NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { jobIdFrom, respond, type RouteContext } from "../../../_lib/respond";
+import { getJobService } from "../../../_lib/service";
 
-export async function GET(_request: Request, context: RouteContext): Promise<NextResponse> {
-  const jobId = await jobIdFrom(context);
-  if (!jobId.ok) return respond(jobId);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-  const service = getJobService();
-  const job = service.getJob(jobId.value);
-  if (!job.ok) return respond(job);
+export async function GET(
+    _request: Request,
+    context: RouteContext
+): Promise<NextResponse> {
+    const jobId = await jobIdFrom(context);
+    if (!jobId.ok) return respond(jobId);
 
-  const assets = service.repo.listAssets(jobId.value, { limit: 100_000 });
-  if (!assets.ok) {
-    return NextResponse.json({ error: { kind: 'repository', detail: assets.error.kind } }, { status: 500 });
-  }
+    const service = getJobService();
+    const job = service.getJob(jobId.value);
+    if (!job.ok) return respond(job);
 
-  const manifest = buildManifest(jobId.value, job.value.config, assets.value, new Date());
+    const assets = service.repo.listAssets(jobId.value, { limit: 100_000 });
+    if (!assets.ok) {
+        return NextResponse.json(
+            { error: { kind: "repository", detail: assets.error.kind } },
+            { status: 500 }
+        );
+    }
 
-  return new NextResponse(JSON.stringify(manifest, null, 2), {
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'content-disposition': `attachment; filename="manifest-${jobId.value}.json"`,
-    },
-  });
+    const manifest = buildManifest(
+        jobId.value,
+        job.value.config,
+        assets.value,
+        new Date()
+    );
+
+    return new NextResponse(JSON.stringify(manifest, null, 2), {
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+            "content-disposition": `attachment; filename="manifest-${jobId.value}.json"`,
+        },
+    });
 }

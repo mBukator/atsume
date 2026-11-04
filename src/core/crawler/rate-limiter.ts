@@ -1,4 +1,4 @@
-import type { Clock } from '../clock';
+import type { Clock } from "../clock";
 
 /**
  * Serialises requests per host. Slots are reserved at acquire time rather than
@@ -7,34 +7,38 @@ import type { Clock } from '../clock';
  * together.
  */
 export class HostRateLimiter {
-  private readonly nextAvailable = new Map<string, number>();
+    private readonly nextAvailable = new Map<string, number>();
 
-  constructor(
-    private readonly clock: Clock,
-    private readonly defaultDelayMs: number,
-  ) {}
+    constructor(
+        private readonly clock: Clock,
+        private readonly defaultDelayMs: number
+    ) {}
 
-  /** robots.txt `Crawl-delay` raises the floor; it never lowers it. */
-  delayFor(crawlDelayMs: number | null): number {
-    return Math.max(this.defaultDelayMs, crawlDelayMs ?? 0);
-  }
+    /** robots.txt `Crawl-delay` raises the floor; it never lowers it. */
+    delayFor(crawlDelayMs: number | null): number {
+        return Math.max(this.defaultDelayMs, crawlDelayMs ?? 0);
+    }
 
-  async acquire(host: string, crawlDelayMs: number | null, signal?: AbortSignal): Promise<number> {
-    const delay = this.delayFor(crawlDelayMs);
-    const now = this.clock.now();
-    const earliest = this.nextAvailable.get(host) ?? 0;
-    const startAt = Math.max(now, earliest);
+    async acquire(
+        host: string,
+        crawlDelayMs: number | null,
+        signal?: AbortSignal
+    ): Promise<number> {
+        const delay = this.delayFor(crawlDelayMs);
+        const now = this.clock.now();
+        const earliest = this.nextAvailable.get(host) ?? 0;
+        const startAt = Math.max(now, earliest);
 
-    this.nextAvailable.set(host, startAt + delay);
+        this.nextAvailable.set(host, startAt + delay);
 
-    const wait = startAt - now;
-    if (wait > 0) await this.clock.sleep(wait, signal);
-    return wait;
-  }
+        const wait = startAt - now;
+        if (wait > 0) await this.clock.sleep(wait, signal);
+        return wait;
+    }
 
-  /** After a 429 or 503 with `Retry-After`, push the whole host out. */
-  penalise(host: string, untilMs: number): void {
-    const current = this.nextAvailable.get(host) ?? 0;
-    this.nextAvailable.set(host, Math.max(current, untilMs));
-  }
+    /** After a 429 or 503 with `Retry-After`, push the whole host out. */
+    penalise(host: string, untilMs: number): void {
+        const current = this.nextAvailable.get(host) ?? 0;
+        this.nextAvailable.set(host, Math.max(current, untilMs));
+    }
 }

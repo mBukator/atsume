@@ -1,13 +1,6 @@
 import type { Clock } from "./clock";
-import type { ComputedBackground, NetworkRecord } from "./extract/context";
-import type {
-    RenderedPage,
-    RenderError,
-    Renderer,
-    RenderOptions,
-} from "./render/renderer";
-import { err, ok, type Result } from "./result";
 import type { FileStore, FsError, WriteHandle } from "./download/file-store";
+import type { ComputedBackground, NetworkRecord } from "./extract/context";
 import type {
     RunOptions,
     SubprocessError,
@@ -23,6 +16,13 @@ import type {
     StreamedResponse,
     StreamOptions,
 } from "./net/http";
+import type {
+    RenderedPage,
+    Renderer,
+    RenderError,
+    RenderOptions,
+} from "./render/renderer";
+import { err, ok, type Result } from "./result";
 
 export interface FakeResponseSpec {
     readonly status?: number;
@@ -79,10 +79,7 @@ export class FakeHttpClient implements HttpClient {
         body: Uint8Array
     ): Map<string, string> {
         const headers = new Map<string, string>();
-        headers.set(
-            "content-type",
-            spec?.contentType ?? "text/html; charset=utf-8"
-        );
+        headers.set("content-type", spec?.contentType ?? "text/html; charset=utf-8");
         headers.set("content-length", String(body.byteLength));
         headers.set("accept-ranges", "bytes");
         for (const [key, value] of Object.entries(spec?.headers ?? {})) {
@@ -117,9 +114,7 @@ export class FakeHttpClient implements HttpClient {
         if (spec?.error !== undefined) return { ok: false, error: spec.error };
 
         if (spec?.delayMs !== undefined) {
-            await new Promise<void>((resolve) =>
-                setTimeout(resolve, spec.delayMs)
-            );
+            await new Promise<void>((resolve) => setTimeout(resolve, spec.delayMs));
         }
 
         const body = this.bodyFor(spec);
@@ -215,10 +210,7 @@ export class FakeHttpClient implements HttpClient {
         const slice = full.subarray(range.from, end + 1);
         const partial = new Map(headers);
         partial.set("content-length", String(slice.byteLength));
-        partial.set(
-            "content-range",
-            `bytes ${range.from}-${end}/${full.byteLength}`
-        );
+        partial.set("content-range", `bytes ${range.from}-${end}/${full.byteLength}`);
 
         return ok({
             url,
@@ -289,9 +281,7 @@ export class FakeRenderer implements Renderer {
     readonly rendered: string[] = [];
     closed = false;
 
-    constructor(
-        private readonly routes: Readonly<Record<string, FakeRenderSpec>> = {}
-    ) {}
+    constructor(private readonly routes: Readonly<Record<string, FakeRenderSpec>> = {}) {}
 
     async render(
         url: string,
@@ -320,15 +310,8 @@ async function* chunked(
     truncateAfter: number | null = null
 ): AsyncIterable<Uint8Array> {
     const limit = truncateAfter ?? bytes.byteLength;
-    for (
-        let offset = 0;
-        offset < Math.min(limit, bytes.byteLength);
-        offset += size
-    ) {
-        yield bytes.subarray(
-            offset,
-            Math.min(offset + size, limit, bytes.byteLength)
-        );
+    for (let offset = 0; offset < Math.min(limit, bytes.byteLength); offset += size) {
+        yield bytes.subarray(offset, Math.min(offset + size, limit, bytes.byteLength));
         await Promise.resolve();
     }
     if (truncateAfter !== null) throw new Error("connection reset mid-stream");
@@ -367,9 +350,7 @@ export class MemoryFileStore implements FileStore {
         return ok({
             async write(chunk: Uint8Array) {
                 const existing = store.get(path) ?? new Uint8Array(0);
-                const next = new Uint8Array(
-                    existing.byteLength + chunk.byteLength
-                );
+                const next = new Uint8Array(existing.byteLength + chunk.byteLength);
                 next.set(existing, 0);
                 next.set(chunk, existing.byteLength);
                 store.set(path, next);
@@ -448,10 +429,7 @@ export class FakeSubprocessRunner implements SubprocessRunner {
         for (const line of spec.stderr ?? []) options.onStderrLine?.(line);
 
         for (const file of spec.writes ?? []) {
-            this.files?.files.set(
-                file.path,
-                new TextEncoder().encode(file.body)
-            );
+            this.files?.files.set(file.path, new TextEncoder().encode(file.body));
         }
 
         return ok({
@@ -465,7 +443,6 @@ export class FakeSubprocessRunner implements SubprocessRunner {
     argsFor(
         predicate: (args: readonly string[]) => boolean
     ): readonly string[] | undefined {
-        return this.invocations.find((invocation) => predicate(invocation.args))
-            ?.args;
+        return this.invocations.find((invocation) => predicate(invocation.args))?.args;
     }
 }

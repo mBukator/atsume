@@ -1,13 +1,11 @@
-import type { MediaCandidate } from "../media";
-import { emptyHints } from "../media";
-import { classifyKind, isHlsUrl } from "./css-urls";
+import { emptyHints, type MediaCandidate } from "../media";
 import {
     directCandidate,
+    resolveAgainst,
     type Extractor,
     type PageContext,
-    resolveAgainst,
 } from "./context";
-import { extractJsonLd, extractMeta } from "./meta";
+import { classifyKind, isHlsUrl } from "./css-urls";
 import {
     extractCssBackground,
     extractIframeEmbed,
@@ -17,6 +15,7 @@ import {
     extractPictureSource,
     extractVideo,
 } from "./html";
+import { extractJsonLd, extractMeta } from "./meta";
 
 const MEDIA_RESOURCE_TYPES = new Set(["image", "media"]);
 
@@ -51,8 +50,7 @@ export const extractNetworkLog: Extractor = (context) => {
         // A request is media if the browser said so or the response says so;
         // resource type alone misses `fetch`-loaded images.
         const kind = classifyKind(url, record.contentType);
-        if (kind === null && !MEDIA_RESOURCE_TYPES.has(record.resourceType))
-            continue;
+        if (kind === null && !MEDIA_RESOURCE_TYPES.has(record.resourceType)) continue;
         if (kind === null) continue;
 
         seen.add(url);
@@ -105,21 +103,15 @@ export const dedupeCandidates = (
                 alt: existing.hints.alt ?? candidate.hints.alt,
                 title: existing.hints.title ?? candidate.hints.title,
                 width:
-                    Math.max(
-                        existing.hints.width ?? 0,
-                        candidate.hints.width ?? 0
-                    ) || null,
+                    Math.max(existing.hints.width ?? 0, candidate.hints.width ?? 0) ||
+                    null,
                 height:
-                    Math.max(
-                        existing.hints.height ?? 0,
-                        candidate.hints.height ?? 0
-                    ) || null,
+                    Math.max(existing.hints.height ?? 0, candidate.hints.height ?? 0) ||
+                    null,
                 declaredMimeType:
-                    existing.hints.declaredMimeType ??
-                    candidate.hints.declaredMimeType,
+                    existing.hints.declaredMimeType ?? candidate.hints.declaredMimeType,
                 srcsetDescriptor:
-                    existing.hints.srcsetDescriptor ??
-                    candidate.hints.srcsetDescriptor,
+                    existing.hints.srcsetDescriptor ?? candidate.hints.srcsetDescriptor,
             },
         });
     }

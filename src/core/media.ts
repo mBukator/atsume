@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { assetIdSchema, jobIdSchema } from "./ids";
 import { isHttpUrl } from "./url";
 
@@ -35,12 +36,7 @@ export const extractorIdSchema = z.enum([
 ]);
 export type ExtractorId = z.infer<typeof extractorIdSchema>;
 
-export const embedProviderSchema = z.enum([
-    "youtube",
-    "vimeo",
-    "dailymotion",
-    "generic",
-]);
+export const embedProviderSchema = z.enum(["youtube", "vimeo", "dailymotion", "generic"]);
 export type EmbedProvider = z.infer<typeof embedProviderSchema>;
 
 /**
@@ -234,9 +230,7 @@ export const knownDimensions = (
     return { width: asset.hints.width, height: asset.hints.height };
 };
 
-export const knownBytes = (
-    asset: Pick<Asset, "probe" | "download">
-): number | null => {
+export const knownBytes = (asset: Pick<Asset, "probe" | "download">): number | null => {
     if (asset.download.status === "complete") return asset.download.bytes;
     if (asset.probe.status === "probed") return asset.probe.contentLength;
     return null;
