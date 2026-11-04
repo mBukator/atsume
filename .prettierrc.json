@@ -1,9 +1,14 @@
 {
-  "singleQuote": true,
-  "semi": true,
-  "tabWidth": 2,
-  "printWidth": 100,
-  "trailingComma": "all",
-  "endOfLine": "lf",
-  "proseWrap": "preserve"
+    "printWidth": 90,
+    "tabWidth": 4,
+    "semi": true,
+    "singleQuote": false,
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "trailingComma": "es5",
+    "jsxSingleQuote": false,
+    "arrowParens": "always",
+    "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+    "importOrder": ["<BUILTIN_MODULES>", "<THIRD_PARTY_MODULES>", "", "^[./]"],
+    "importOrderTypeScriptVersion": "5.9.3"
 }
