@@ -1,0 +1,10 @@
+# Captured from real sites and compared byte for byte.
+src/core/extract/fixtures/
+src/core/telegram/fixtures/
+# Generated or local.
+.atsume/
+.next/
+coverage/
+package-lock.json
+next-env.d.ts
+LICENSE
