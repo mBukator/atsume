@@ -1,0 +1,7 @@
+{
+    "maxSubjectLength": 72,
+    "maxScopeLength": 20,
+    "autoAdd": true,
+    "theme": "wizard",
+    "showCharacterCounter": true
+}
