@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { errorResponse, parseJobId } from "../../../../../_lib/respond";
 import { getJobService } from "../../../../../_lib/service";
+import { UNTRUSTED_BYTES_HEADERS } from "../../../../../_lib/untrusted";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -102,6 +103,7 @@ export async function GET(_request: Request, context: PreviewContext): Promise<R
     return new NextResponse(body, {
         status: 200,
         headers: {
+            ...UNTRUSTED_BYTES_HEADERS,
             "content-type": contentType ?? "application/octet-stream",
             // Without this the browser re-fetches every tile on each re-render, and
             // re-renders are frequent while the grid is filling in measurements.
